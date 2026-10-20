@@ -24,7 +24,7 @@ document.getElementById("pizza-form").onsubmit = () => {
     }
 
     let methodSelected = false; 
-    let methodButtons = document.getElementsByClassName("method");
+    let methodButtons = document.getElementsByName("method");
 
     for (let i = 0; i < methodButtons.length; i++) {
         if (methodButtons[i].checked) {
