@@ -28,6 +28,10 @@ app.get('/confirm-order', (req, res) => {
     res.sendFile(`${import.meta.dirname}/views/confirm.html`);
 });
 
+app.get('/admin', (req, res) => {
+    res.send(orders); 
+})
+
 // Add a route to process a pizza order
 app.post('/submit-order', (req, res) => {
 
