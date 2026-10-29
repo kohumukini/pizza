@@ -13,23 +13,25 @@ app.use(express.static('public'));
 
 app.use(express.urlencoded({ extended: true }));
 
+app.set('view engine', 'ejs');
+
 // Define a deafult route 
 app.get('/', (req, res) => {
-    res.sendFile(`${import.meta.dirname}/views/home.html`);
+    res.render('home');
 });
 
 // Add a contact route to display a contact viewpage
 app.get("/contact-us", (req, res) => {
-    res.sendFile(`${import.meta.dirname}/views/contact.html`);
+    res.render('contact')
 });
 
 
 app.get('/confirm-order', (req, res) => {
-    res.sendFile(`${import.meta.dirname}/views/confirm.html`);
+    res.render('confirm')
 });
 
 app.get('/admin', (req, res) => {
-    res.send(orders); 
+    res.render("admin", { orders });
 })
 
 // Add a route to process a pizza order
@@ -46,12 +48,12 @@ app.post('/submit-order', (req, res) => {
     console.log(orders);
 
     // Display the confirmation page
-    res.sendFile(`${import.meta.dirname}/views/confirm.html`);
+    res.render('confirm', { order })
 
 });
 
 app.get("/menu", (req, res) => {
-    res.sendFile(`${import.meta.dirname}/views/menu.html`)
+    res.render('menu')
 })
 
 app.listen(PORT, () => {
