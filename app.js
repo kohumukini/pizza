@@ -71,7 +71,7 @@ app.post('/submit-order', async(req, res) => {
     console.log(order);
 
     // Convert toppings array to a csv 
-    order.toppings = Array.isjArray(order.toppings) ?
+    order.toppings = Array.isArray(order.toppings) ?
         order.toppings.join(", ") : ""; 
 
     const sql = `INSERT INTO orders (fname, lname, email, size, method, toppings, comment) VALUES(?, ?, ?, ?, ?, ?, ?)`;
