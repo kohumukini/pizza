@@ -16,15 +16,15 @@ const pool = mysql2.createPool({
     port: process.env.DB_PORT, 
 }).promise();
 
-app.get('/db-test', async(req, res) => {
-    try {
-        const orders = await pool.query('SELECT * FROM orders'); 
-        res.send(orders[0]); 
-    } catch(err) {
-        console.error('Database error:', err);
-        res.status(500).send('Database error occurred');
-    }
-})
+// app.get('/db-test', async(req, res) => {
+//     try {
+//         const orders = await pool.query('SELECT * FROM orders'); 
+//         res.send(orders[0]); 
+//     } catch(err) {
+//         console.error('Database error:', err);
+//         res.status(500).send('Database error occurred');
+//     }
+// })
 
 // Defeine the port
 const PORT = 3000; 
@@ -53,9 +53,9 @@ app.get('/confirm-order', (req, res) => {
 
 app.get('/admin', async(req, res) => {
     try {
-        const orders = await pool.query('SELECT * FROM orders'); 
-        console.log(orders[0]); 
-        res.render("admin", { orders:orders[0] });
+        const [orders] = await pool.query('SELECT * FROM orders ORDER BY timestamp DESC');
+        console.log(orders);
+        res.render("admin", { orders })
     } catch(err) {
         console.log('Database error:', err);
         res.status(500).send('Database error occurred');
@@ -67,7 +67,12 @@ app.post('/submit-order', async(req, res) => {
 
     // Create a JSON object to store order data
     const order = req.body;
+    order.timestamp = new Date(); 
     console.log(order);
+
+    // Convert toppings array to a csv 
+    order.toppings = Array.isjArray(order.toppings) ?
+        order.toppings.join(", ") : ""; 
 
     const sql = `INSERT INTO orders (fname, lname, email, size, method, toppings, comment) VALUES(?, ?, ?, ?, ?, ?, ?)`;
 
@@ -83,6 +88,9 @@ app.post('/submit-order', async(req, res) => {
     ]
 
     const [result] = await pool.execute(sql, params); 
+
+    order.id = result.insertId; 
+    console.log("A new row was inserted with ID " + order.id); 
 
     // Display the confirmation page
     res.render('confirm', { order })

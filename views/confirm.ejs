@@ -6,8 +6,9 @@
     <title>Order Confirmation</title>
 </head>
 <body>
-    <p>Order Summary</p>
-    <p>Name: <%= order.fname %> <%= order.lname %></p>
+    <h1>Thank you <%= order.fname %> <%= order.lname %></h1>
+    <h2>Order Summary</h2>
+    <p>Order ID: <%= order.id %></p>
     <p>Email: <%= order.email %></p>
     <p>Pickup or Delivery: <%=order.method %></p>
     <p>Toppings: <%=order.toppings %></p>
