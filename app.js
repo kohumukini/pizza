@@ -1,12 +1,33 @@
-import express from "express"
+import express from "express";
+import mysql2 from "mysql2";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // Define the application
 const app = express();
 
+// Create Connection Pool
+const pool = mysql2.createPool({
+    host: process.env.DB_HOST, 
+    user: process.env.DB_USER, 
+    password: process.env.DB_PASSWORD, 
+    database: process.env.DB, 
+    port: process.env.DB_PORT, 
+}).promise();
+
+app.get('/db-test', async(req, res) => {
+    try {
+        const orders = await pool.query('SELECT * FROM orders'); 
+        res.send(orders[0]); 
+    } catch(err) {
+        console.error('Database error:', err);
+        res.status(500).send('Database error occurred');
+    }
+})
+
 // Defeine the port
 const PORT = 3000; 
-
-const orders = []
 
 // Enable static file serving
 app.use(express.static('public'));
@@ -30,22 +51,38 @@ app.get('/confirm-order', (req, res) => {
     res.render('confirm')
 });
 
-app.get('/admin', (req, res) => {
-    res.render("admin", { orders });
+app.get('/admin', async(req, res) => {
+    try {
+        const orders = await pool.query('SELECT * FROM orders'); 
+        console.log(orders[0]); 
+        res.render("admin", { orders:orders[0] });
+    } catch(err) {
+        console.log('Database error:', err);
+        res.status(500).send('Database error occurred');
+    } 
 })
 
 // Add a route to process a pizza order
-app.post('/submit-order', (req, res) => {
+app.post('/submit-order', async(req, res) => {
 
     // Create a JSON object to store order data
     const order = req.body;
-    order['timestamp'] = new Date();
-
     console.log(order);
 
-    // Add order object to orders array
-    orders.push(order);
-    console.log(orders);
+    const sql = `INSERT INTO orders (fname, lname, email, size, method, toppings, comment) VALUES(?, ?, ?, ?, ?, ?, ?)`;
+
+    // Create an array of parameters from order data
+    const params = [
+        order.fname, 
+        order.lname, 
+        order.email, 
+        order.size, 
+        order.method, 
+        order.toppings, 
+        order.comment
+    ]
+
+    const [result] = await pool.execute(sql, params); 
 
     // Display the confirmation page
     res.render('confirm', { order })
