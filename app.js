@@ -1,6 +1,7 @@
 import express from "express";
 import mysql2 from "mysql2";
 import dotenv from "dotenv";
+import session from 'express-session'
 
 dotenv.config();
 
@@ -26,7 +27,7 @@ const pool = mysql2.createPool({
 //     }
 // })
 
-// Defeine the port
+// Define the port
 const PORT = 3000; 
 
 // Enable static file serving
@@ -34,14 +35,26 @@ app.use(express.static('public'));
 
 app.use(express.urlencoded({ extended: true }));
 
+app.use(session({
+    secret: process.env.SESSION_SECRET, 
+    resave: false, 
+    saveUninitialized: false, 
+    cookie: { maxAge: 1000 * 60 * 60 }
+}));
+
+function requireLogin(req, res, next) {
+    if (req.session.loggedIn) next(); 
+    else res.redirect('/login');
+}
+
 app.set('view engine', 'ejs');
 
-// Define a deafult route 
+// Define a default route 
 app.get('/', (req, res) => {
     res.render('home');
 });
 
-// Add a contact route to display a contact viewpage
+// Add a contact route to display a contact view page
 app.get("/contact-us", (req, res) => {
     res.render('contact')
 });
@@ -51,7 +64,24 @@ app.get('/confirm-order', (req, res) => {
     res.render('confirm')
 });
 
-app.get('/admin', async(req, res) => {
+app.get("/login", (req, res) => {
+    res.render('login', { error: null });
+});
+
+app.post("/login", (req, res) => {
+    const username = req.body.username; 
+    const password = req.body.password; 
+
+    if (username === process.env.ADMIN_USER && 
+        password === process.env.ADMIN_PASSWORD) {
+        req.session.loggedIn = true; 
+        res.redirect('/admin');
+    } else {
+        res.render('login', { error: 'Invalid username or password'     })
+    }
+});
+
+app.get('/admin', requireLogin, async(req, res) => {
     try {
         const [orders] = await pool.query('SELECT * FROM orders ORDER BY timestamp DESC');
         console.log(orders);
@@ -60,6 +90,12 @@ app.get('/admin', async(req, res) => {
         console.log('Database error:', err);
         res.status(500).send('Database error occurred');
     } 
+})
+
+app.get('/logout', (req, res) => {
+    req.session.destroy(() => {
+        res.redirect('/login');
+    })
 })
 
 // Add a route to process a pizza order
