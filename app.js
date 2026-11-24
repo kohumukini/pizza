@@ -1,7 +1,9 @@
 import express from "express";
 import mysql2 from "mysql2";
 import dotenv from "dotenv";
-import session from 'express-session'
+import session from 'express-session';
+
+import { validateForm } from './validation.js';
 
 dotenv.config();
 
@@ -105,6 +107,10 @@ app.post('/submit-order', async(req, res) => {
     const order = req.body;
     order.timestamp = new Date(); 
     console.log(order);
+
+    // Validate the data on the server
+    const valid = validateForm(order); 
+
 
     // Convert toppings array to a csv 
     order.toppings = Array.isArray(order.toppings) ?
